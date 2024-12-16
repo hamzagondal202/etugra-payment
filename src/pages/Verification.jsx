@@ -15,8 +15,11 @@ export default function Verification() {
 
     const handleNext = (e) => {
         e.preventDefault();
+        setIfSend(1)
         console.log("Form Data:", formData); // Debugging log
-        navigate("/customer-info");
+        if (ifSend > 0) {
+            navigate("/customer-info");
+        }
     };
 
     const handleInputChange = (e) => {
@@ -66,11 +69,8 @@ export default function Verification() {
                                         required
                                     />
                                     <button
-                                        type="button"
+                                        type="subit"
                                         className="text-orange-500 border border-orange-500 h-12 p-2 px-4 rounded-2xl hover:bg-orange-500 hover:text-white"
-                                        onClick={() => {
-                                            setIfSend(1)
-                                        }}
                                     >
                                         {ifSend === 0 ? "Send" : "Resend"}
                                     </button>
@@ -109,7 +109,7 @@ export default function Verification() {
                             <button
                                 type="submit"
                                 className="bg-orange-500 text-white px-6 py-2 w-full hover:bg-orange-600"
-
+                                disabled={ifSend === 0 ? "true" : ""}
                             >
                                 Next
                             </button>
