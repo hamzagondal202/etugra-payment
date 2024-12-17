@@ -4,6 +4,8 @@ import ProgressBar from "../components/ProgressBar";
 import createAccountIllustration from "../assets/Sign up-cuate 1.png"; // Replace with actual image path
 import etugra from "../assets/etugra-logo 1.png";
 import "react-phone-input-2/lib/material.css";
+import PhoneInput from 'react-phone-input-2'
+import 'react-phone-input-2/lib/style.css'
 
 export default function Verification() {
     const navigate = useNavigate();
@@ -53,24 +55,56 @@ export default function Verification() {
                             <div className="md:col-span-1 col-span-2">
                                 <div className="flex">
                                     {/* <!-- Country Code Dropdown --> */}
-                                    <select id="countryCode" className="block h-12 w-14 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-2xl">
+                                    {/* <select id="countryCode" className="block h-12 w-14 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-2xl">
+                                        <option value="+49">+90 (Turkey)</option>
                                         <option value="+49">+49 (Germany)</option>
                                         <option value="+1">+1 (USA)</option>
                                         <option value="+44">+44 (UK)</option>
                                         <option value="+91">+91 (India)</option>
                                         <option value="+33">+33 (France)</option>
-                                    </select>
+                                    </select> */}
                                     {/* <!-- Mobile Number Input --> */}
-                                    <input
+                                    {/* <input
                                         type="tel"
                                         id="phoneNumber"
                                         placeholder="Phone#"
                                         className="flex-1 block w-full h-12 p-2 px-3 py-2 me-2 text-gray-700 bg-white border border-gray-300 rounded-r-2xl"
                                         required
+                                    /> */}
+                                    <PhoneInput
+                                        country={'tr'}
+                                        value={formData.phone}
+                                        onChange={phone => setFormData({ phone })}
+                                        inputStyle={{
+                                            borderRadius: '17px',
+                                            width: '99%',
+                                            height: '48px',
+                                            paddingLeft: '50px', // Ensure room for flag button
+                                            border: '1px solid #ccc',
+                                            outline: 'none',
+                                            boxShadow: 'none',
+                                          }}
+                                          buttonStyle={{
+                                            borderTopLeftRadius: '17px',
+                                            borderBottomLeftRadius: '17px',
+                                            margin: '0', // Remove margins that cause alignment issues
+                                            width: '48px', // Standardize width for the flag button
+                                            backgroundColor: 'white', // Match input background
+                                            border: '1px solid #ccc', // Align border with input
+                                            boxShadow: 'none', // Prevent button shadow
+                                            
+                                          }}
+                                          dropdownStyle={{
+                                            inlineSize:'200px',
+                                            textAlign: 'center'
+                                          }}
+                                          searchStyle={{
+                                            paddingLeft: '10px',
+                                          }}
                                     />
                                     <button
                                         type="subit"
-                                        className="text-orange-500 border border-orange-500 h-12 p-2 px-4 rounded-2xl hover:bg-orange-500 hover:text-white"
+                                        className="text-orange-500 border border-orange-500 px-4 rounded-2xl hover:bg-orange-500 hover:text-white"
                                     >
                                         {ifSend === 0 ? "Send" : "Resend"}
                                     </button>

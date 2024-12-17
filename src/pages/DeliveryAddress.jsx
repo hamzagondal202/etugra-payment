@@ -5,6 +5,8 @@ import etugra from "../assets/etugra-logo 1.png";
 import ProgressBar from "../components/ProgressBar";
 import "react-phone-input-2/lib/material.css";
 import "react-intl-tel-input/dist/main.css";
+import PhoneInput from 'react-phone-input-2'
+import 'react-phone-input-2/lib/style.css'
 
 export default function AddressScreen() {
   const [addresses] = useState([{ id: 1 }]);
@@ -75,15 +77,15 @@ export default function AddressScreen() {
               <div className="md:col-span-1 col-span-2">
                 <div className="flex">
                   {/* <!-- Country Code Dropdown --> */}
-                  <select id="countryCode" className="block h-12 w-14 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-2xl">
+                  {/* <select id="countryCode" className="block h-12 w-14 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-2xl">
                     <option value="+49">+49 (Germany)</option>
                     <option value="+1">+1 (USA)</option>
                     <option value="+44">+44 (UK)</option>
                     <option value="+91">+91 (India)</option>
                     <option value="+33">+33 (France)</option>
-                  </select>
+                  </select> */}
                   {/* <!-- Mobile Number Input --> */}
-                  <input
+                  {/* <input
                     type="tel"
                     name="phoneNumber"
                     placeholder="Phone#"
@@ -91,6 +93,37 @@ export default function AddressScreen() {
                     value={customerInfo.phoneNumber}
                     onChange={handleCustomerInfoChange}
                     required
+                  /> */}
+                  <PhoneInput
+                    country={'tr'}
+                    value={customerInfo.phoneNumber}
+                    onChange={phone => setCustomerInfo({ phone })}
+                    inputStyle={{
+                      borderRadius: '17px',
+                      width: '99%',
+                      height: '48px',
+                      paddingLeft: '50px', // Ensure room for flag button
+                      border: '1px solid #ccc',
+                      outline: 'none',
+                      boxShadow: 'none',
+                    }}
+                    buttonStyle={{
+                      borderTopLeftRadius: '17px',
+                      borderBottomLeftRadius: '17px',
+                      margin: '0', // Remove margins that cause alignment issues
+                      width: '48px', // Standardize width for the flag button
+                      backgroundColor: 'white', // Match input background
+                      border: '1px solid #ccc', // Align border with input
+                      boxShadow: 'none', // Prevent button shadow
+
+                    }}
+                    dropdownStyle={{
+                      inlineSize: '200px',
+                      textAlign: 'center'
+                    }}
+                    searchStyle={{
+                      paddingLeft: '10px',
+                    }}
                   />
                 </div>
                 <label className="text-xs ms-2 text-gray-400">Enter your Phone No.</label>
@@ -288,7 +321,7 @@ const AddressForm = ({ id, type, disabled, onDelete, addresses, setAddresses, he
 
 
     if (selectedData) {
-        setSelectedAddress(selectedAddress)
+      setSelectedAddress(selectedAddress)
       setFormData(selectedData);
       console.log("set form data if selected data present");
 
