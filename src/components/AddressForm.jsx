@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useRef, useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import locations from "../assets/locations.json"
+import deleteIcon from "../assets/delete.png"
 // import {
 //   CitySelect,
 //   CountrySelect,
@@ -197,9 +198,13 @@ export const AddressForm = forwardRef(function AddressForm({ id, type, onDelete,
                 <button
                     type="button"
                     onClick={() => deleteAddress()}
-                    className="mt-2 bg-red-500 text-white px-4 py-2 hover:bg-red-600"
+                    className="mt-2"
                 >
-                    Delete
+                    <img
+                        src={deleteIcon} // Replace with the image URL or leave blank for now
+                        alt=""
+                        className="size-7 hover:bg-gray-200"
+                    />
                 </button>
             )
         )
@@ -328,7 +333,7 @@ export const AddressForm = forwardRef(function AddressForm({ id, type, onDelete,
             <form ref={formRef} onSubmit={handleNext} className="space-y-4 my-4">
                 <div className="flex flex-row items-center justify-between">
                     <h2 className="text-2xl font-bold">{heading}</h2>
-                    <div className="space-x-2">
+                    <div className="space-x-4 flex flex-row items-center">
                         {renderDelButton()}
                         {renderNewButton()}
                     </div>
