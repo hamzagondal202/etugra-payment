@@ -1,42 +1,87 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { AddressForm } from "../components/AddressForm";
 import address from "../assets/Address-cuate 1.png"
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import etugra from "../assets/etugra-logo 1.png";
+import errorIcon from "../assets/error-message.png"
 import ProgressBar from "../components/ProgressBar";
 import "react-phone-input-2/lib/material.css";
 import "react-intl-tel-input/dist/main.css";
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
+import axios from 'axios';
+// import {
+//   CitySelect,
+//   CountrySelect,
+//   StateSelect,
+//   RegionSelect
+// } from "react-country-state-city";
+import "react-country-state-city/dist/react-country-state-city.css";
 
 export default function AddressScreen() {
+  const location = useLocation();
+  const { checkoutForm } = location.state || {};
+  console.log(checkoutForm);
+
   const [addresses] = useState([{ id: 1 }]);
   const [billingAddresses, setBillingAddresses] = useState([]);
   const [deliveryAddresses, setDeliveryAddresses] = useState([]);
   const [sameAsBilling, setSameAsBilling] = useState(false)
+  const [showError, setShowError] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
-    phoneNumber: "",
+    phoneNumber: checkoutForm.phone,
     email: "",
-    fullName: "",
+    fullName: checkoutForm.firstName + " " + checkoutForm.lastName,
   });
   const navigate = useNavigate();
 
-  const handleNext = () => {
-    if (sameAsBilling) {
-      const dataToSubmit = {
-        customerInfo,
-        billingAddresses,
-      };
-      console.log(dataToSubmit);
+  // Create refs for each AddressForm
+  const billingFormRef = useRef(null);
+  const deliveryFormRef = useRef(null);
 
-    } else {
-      const dataToSubmit = {
-        customerInfo,
-        billingAddresses,
-        deliveryAddresses,
-      };
-      console.log(dataToSubmit);
-
+  const validateFields = () => {
+    // Check if all customer info fields are filled
+    if (!customerInfo.phoneNumber || !customerInfo.email || !customerInfo.fullName) {
+      return false;
     }
+
+
+    // Validate Billing and Delivery forms
+    const isBillingValid = billingFormRef.current.isFormValid();
+    const isDeliveryValid = sameAsBilling || deliveryFormRef.current.isFormValid();
+    console.log(billingFormRef.current.getFormData())
+
+    return isBillingValid && isDeliveryValid;
+  };
+
+  let dataToSubmit = {}
+
+  const handleNext = () => {
+    // Validate all fields before proceeding
+    if (validateFields()) {
+      if (sameAsBilling) {
+        dataToSubmit = {
+          customerInfo,
+          billingAddresses,
+        };
+        console.log(dataToSubmit);
+      } else {
+        dataToSubmit = {
+          customerInfo,
+          billingAddresses,
+          deliveryAddresses,
+        };
+        console.log(dataToSubmit);
+      }
+      executeApiFlow();
+      // navigate('/payment'); // Proceed to payment if all fields are valid
+    } else {
+      setShowError(true)
+      // alert("Please fill in all required fields before proceeding.");
+    }
+
+
+
 
     // const allAddresses = [...billingAddresses, ...deliveryAddresses];
     // const allFieldsFilled = allAddresses.every(address =>
@@ -50,8 +95,206 @@ export default function AddressScreen() {
     // } else {
     //   alert("Please fill all fields in every form.");
     // }
-    navigate('/payment');
   };
+
+  const executeApiFlow = async () => {
+    try {
+      console.log("Starting API Flow...");
+      const accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxMTczLCJ1c2VybmFtZSI6InJlYWN0LmN1c3RvbWVyMUB0ZXN0LmNvbSIsImV4cCI6MTczNTcxOTIwNX0.ntkh1CjG33ArCM0nUJs5_lED2pKQ4fCqa0vn0cFLssU";
+      // Step 1: Create User
+      // const createUserResponse = await createUser(accessToken);
+      // console.log(createUserResponse);
+
+      // const user_id = createUserResponse.user_id
+      // const partner_id = createUserResponse.partner_id
+      // console.log("User ID:", user_id, "  Partner ID:", partner_id);
+
+      // // Step 2: Create Sales Order
+      // const createOrderResponse = await createOrder(partner_id, accessToken);
+      // const order_id = createOrderResponse.order_id;
+      // console.log("Order id:", order_id);
+
+      // // Step 3: Call Invoice Address
+      // const billingAddResponse = await createBillingAddress(accessToken);
+      // const invoice_address_id= billingAddResponse.invoice_address_id;
+      // console.log("Third API Result:", invoice_address_id);
+
+      // // Step 4: Call Delivery Address
+      // const deliveryAddResponse = await createDeliveryAddress(accessToken);
+      // const delivery_address_id = deliveryAddResponse.result.delivery_address_id;
+      // console.log("Fourth API Result:", delivery_address_id);
+
+      console.log("API Flow Completed Successfully.");
+
+      // navigate('/payment'); // Proceed to payment if all fields are valid
+
+    } catch (error) {
+      console.error("API Flow Failed:", error.message);
+    }
+  };
+
+
+  const createUser = async (accessToken) => {
+    const postData = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
+        name: customerInfo.fullName,
+        email: customerInfo.email,
+        mobile: "+" + customerInfo.phoneNumber,
+      },
+      id: 1,
+    };
+
+    try {
+      const response = await axios.post(`/hi/portal_create_user`, postData, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data && response.data.result) {
+        const result = JSON.parse(response.data.result);
+
+        return result // Return partner_id on success
+      } else {
+        throw new Error("Create User API failed: " + JSON.stringify(response.data));
+      }
+    } catch (error) {
+      handleError(error, "Create User API");
+      throw error;
+    }
+  };
+
+  const createOrder = async (partnerId, accessToken) => {
+    const postData = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
+        partner_id: partnerId,
+        order_lines: [
+          {
+            product_id: 1,
+            quantity: checkoutForm.quantity,
+            company_type: "person",
+            verify_type: checkoutForm.nationalIdType,
+            tckn: "58333485650",
+            passport_no: checkoutForm.nationalId,
+            dob: checkoutForm.dob,
+            person_first_name: checkoutForm.firstName,
+            person_last_name: checkoutForm.lastName,
+            email: customerInfo.email,
+            phone: checkoutForm.phone,
+            usage_area_id: 1, // for nes only
+            account_type: "personal" // or company for KEP, TSA, and API
+          }
+        ]
+      },
+      id: 3,
+    };
+
+    try {
+      const response = await axios.post(`/hi/portal_create_sale_order`, postData, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data && response.data.result) {
+        const result = response.data.result;
+        return result // Return the result on success
+      } else {
+        throw new Error("Create Order API failed: " + JSON.stringify(response.data));
+      }
+    } catch (error) {
+      handleError(error, "Create Order API");
+      throw error;
+    }
+  };
+
+  const createBillingAddress = async (accessToken) => {
+    const postData = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
+        name: customerInfo.fullName,
+        street: "Billing Street 3",
+        city_id: 2843, // A city in the 966 state of Turkey
+        state_id: 966,
+        zip: "98765",
+        vat: "7894561237",
+        tax_office_name: "testing tax office",
+        country_id: 224, // Turkey
+      },
+      id: 5,
+    };
+
+    try {
+      const response = await axios.post(`/hi/portal_create_invoice_address`, postData, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data && response.data.result) {
+        return response.data.result; // Return the result on success
+      } else {
+        throw new Error("Billing API failed: " + JSON.stringify(response.data));
+      }
+    } catch (error) {
+      handleError(error, "Billing API");
+      throw error;
+    }
+  };
+
+  const createDeliveryAddress = async (accessToken) => {
+    const postData = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
+        name: "New Delivery test2",
+        street: "New Delivery Address",
+        city_id: 2845,
+        state_id: 966,
+        zip: "67590",
+      },
+      id: 7,
+    };
+
+    try {
+      const response = await axios.post(`/hi/portal_create_delivery_address`, postData, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data && response.data.result) {
+        return JSON.parse(response.data.result); // Return the result on success
+      } else {
+        throw new Error("Delivery API failed: " + JSON.stringify(response.data));
+      }
+    } catch (error) {
+      handleError(error, "Delivery API");
+      throw error;
+    }
+  };
+
+  const handleError = (error, apiName) => {
+    if (error.response) {
+      console.error(`${apiName} Error Response:`, error.response.data);
+    } else if (error.request) {
+      console.error(`${apiName} Error Request:`, error.request);
+    } else {
+      console.error(`${apiName} Error Message:`, error.message);
+    }
+  };
+
+
+
 
   const handleCustomerInfoChange = (e) => {
     console.log(sameAsBilling)
@@ -60,32 +303,55 @@ export default function AddressScreen() {
   };
 
   return (
-    <div className="min-h-screen flex md:flex-row flex-col">
-      {/* Left Section */}
-      <div className="w-full md:w-1/2 bg-gray-100 flex flex-col items-center justify-center p-8 gap-4 overflow-auto">
-        <ProgressBar currentStep={2} />
-        <img
-          src={etugra} // Replace with the image URL or leave blank for now
-          alt="Validation illustration"
-          className="mb-6 mx-auto"
-        />
-        {/* Customer information Section */}
-        <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
-          <h1 className="text-2xl font-bold mb-6">Customer Information</h1>
-          <form className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="md:col-span-1 col-span-2">
-                <div className="flex">
-                  {/* <!-- Country Code Dropdown --> */}
-                  {/* <select id="countryCode" className="block h-12 w-14 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-2xl">
+    <>
+      {showError && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <img
+              src={errorIcon} // Replace with the image URL or leave blank for now
+              alt="Validation illustration"
+              className="mb-2 mx-auto size-14"
+            />
+            <h2 className="text-xl font-bold mb-4">Fill all the forms to continue</h2>
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={() => setShowError(false)}
+                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600"
+              >
+                close
+              </ button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen flex md:flex-row flex-col">
+        {/* Left Section */}
+        <div className="w-full md:w-1/2 bg-gray-100 flex flex-col items-center justify-center p-8 gap-4 overflow-auto">
+          <ProgressBar currentStep={2} />
+          <img
+            src={etugra} // Replace with the image URL or leave blank for now
+            alt="Validation illustration"
+            className="mb-6 mx-auto"
+          />
+          {/* Customer information Section */}
+          <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
+            <h1 className="text-2xl font-bold mb-6">Customer Information</h1>
+            <form className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="md:col-span-1 col-span-2">
+                  <div className="flex">
+                    {/* <!-- Country Code Dropdown --> */}
+                    {/* <select id="countryCode" className="block h-12 w-14 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-2xl">
                     <option value="+49">+49 (Germany)</option>
                     <option value="+1">+1 (USA)</option>
                     <option value="+44">+44 (UK)</option>
                     <option value="+91">+91 (India)</option>
                     <option value="+33">+33 (France)</option>
                   </select> */}
-                  {/* <!-- Mobile Number Input --> */}
-                  {/* <input
+                    {/* <!-- Mobile Number Input --> */}
+                    {/* <input
                     type="tel"
                     name="phoneNumber"
                     placeholder="Phone#"
@@ -94,504 +360,143 @@ export default function AddressScreen() {
                     onChange={handleCustomerInfoChange}
                     required
                   /> */}
-                  <PhoneInput
-                    country={'tr'}
-                    value={customerInfo.phoneNumber}
-                    onChange={phone => setCustomerInfo({ phone })}
-                    inputStyle={{
-                      borderRadius: '17px',
-                      width: '99%',
-                      height: '48px',
-                      paddingLeft: '50px', // Ensure room for flag button
-                      border: '1px solid #ccc',
-                      outline: 'none',
-                      boxShadow: 'none',
-                    }}
-                    buttonStyle={{
-                      borderTopLeftRadius: '17px',
-                      borderBottomLeftRadius: '17px',
-                      margin: '0', // Remove margins that cause alignment issues
-                      width: '48px', // Standardize width for the flag button
-                      backgroundColor: 'white', // Match input background
-                      border: '1px solid #ccc', // Align border with input
-                      boxShadow: 'none', // Prevent button shadow
+                    <PhoneInput
+                      country={'tr'}
+                      value={customerInfo.phoneNumber}
+                      disabled={true}
+                      isValid={(value, country) => {
+                        if (value.match(/12345/)) {
+                          return 'Invalid value: ' + value + ', ' + country.name;
+                        } else if (value.match(/1234/)) {
+                          return false;
+                        } else {
+                          return true;
+                        }
+                      }}
+                      inputProps={{
+                        name: 'phone',
+                        required: true,
+                        autoFocus: true
+                      }}
+                      inputStyle={{
+                        borderRadius: '17px',
+                        width: '99%',
+                        height: '48px',
+                        paddingLeft: '50px', // Ensure room for flag button
+                        border: '1px solid #ccc',
+                        outline: 'none',
+                        boxShadow: 'none',
+                        backgroundColor: "#FAFAFA"
+                      }}
+                      buttonStyle={{
+                        borderTopLeftRadius: '17px',
+                        borderBottomLeftRadius: '17px',
+                        margin: '0', // Remove margins that cause alignment issues
+                        width: '48px', // Standardize width for the flag button
+                        backgroundColor: '#FAFAFA', // Match input background
+                        border: '1px solid #ccc', // Align border with input
+                        boxShadow: 'none', // Prevent button shadow
 
-                    }}
-                    dropdownStyle={{
-                      inlineSize: '200px',
-                      textAlign: 'center'
-                    }}
-                    searchStyle={{
-                      paddingLeft: '10px',
-                    }}
-                  />
+                      }}
+                      dropdownStyle={{
+                        inlineSize: '200px',
+                        textAlign: 'center'
+                      }}
+                      searchStyle={{
+                        paddingLeft: '10px',
+                      }}
+                    />
+                  </div>
+                  <label className="text-xs ms-2 text-gray-400">Enter your Phone No.</label>
                 </div>
-                <label className="text-xs ms-2 text-gray-400">Enter your Phone No.</label>
+
+                <div className="md:col-span-1 col-span-2">
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="example@email.com"
+                    className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm"
+                    value={customerInfo.email}
+                    onChange={handleCustomerInfoChange}
+                    required
+                  />
+                  <label className="text-xs ms-2 text-gray-400">Enter your email</label>
+                </div>
               </div>
 
-              <div className="md:col-span-1 col-span-2">
+              <div className="col-span-2">
                 <input
-                  type="email"
-                  name="email"
-                  placeholder="example@email.com"
+                  type="text"
+                  name="fullName"
+                  placeholder="Full Name"
                   className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm"
-                  value={customerInfo.email}
+                  value={customerInfo.fullName}
                   onChange={handleCustomerInfoChange}
                   required
                 />
-                <label className="text-xs ms-2 text-gray-400">Enter your email</label>
-              </div>
-            </div>
-
-            <div className="col-span-2">
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Full Name"
-                className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm"
-                value={customerInfo.fullName}
-                onChange={handleCustomerInfoChange}
-                required
-              />
-              <label className="text-xs ms-2 text-gray-400">Enter your Full Name</label>
-            </div>
-          </form>
-        </div>
-
-        {/* Billing Address Section */}
-        <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
-          {addresses.map((address) => (
-            <AddressForm
-              key={address.id}
-              id={address.id}
-              addresses={billingAddresses}
-              setAddresses={setBillingAddresses}
-              type="billing"
-              heading="Billing Address"
-            // onDelete={() => deleteAddress(address.id)}
-            />
-          ))}
-        </div>
-
-        {/* Delivery Address Section */}
-        <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
-          {addresses.map((address, index) => (
-            <AddressForm
-              key={index}
-              id={address.id}
-              addresses={deliveryAddresses}
-              setAddresses={setDeliveryAddresses}
-              type="delivery"
-              heading="Delivery Address"
-              setIsSameAsBilling={setSameAsBilling}
-            // onDelete={() => deleteAddress(address.id)}
-            />
-          ))}
-        </div>
-        {/* Next Button */}
-        <div className="flex self-end me-4 mb-8 w-40">
-          <button
-            type="submit"
-            className="bg-orange-500 text-white px-6 py-2 w-full hover:bg-orange-600"
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div>
-      </div>
-
-      {/* Right Section */}
-      <div className="w-full md:w-1/2 bg-orange-100 p-6 h-screen md:fixed md:right-0">
-        <div className="flex flex-col items-center justify-center h-full">
-          <img
-            src={address}
-            alt="Location Placeholder"
-            className="w-1/2 mb-4"
-          />
-          <p className="text-orange-500 font-semibold text-start">
-            <strong>Important Note:</strong>
-            <uo>
-              <li>Please ensure the delivery address is accurate
-                and complete to avoid any delays.</li>
-            </uo>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-//
-//
-//
-//------------------------------------------------------------------------------------------------------------------------------------------
-//
-//
-//
-// eslint-disable-next-line react/prop-types, no-unused-vars
-const AddressForm = ({ id, type, disabled, onDelete, addresses, setAddresses, heading, setIsSameAsBilling }) => {
-  const [formData, setFormData] = useState({
-    addressLine1: "",
-    addressLine2: "",
-    postalCode: "",
-    city: "",
-    state: "",
-    country: "Turkey"
-  });
-  const [dialogFormData, setDialogFormData] = useState({
-    addressLine1: "",
-    addressLine2: "",
-    postalCode: "",
-    city: "",
-    state: "",
-    country: "Turkey"
-  });
-  const [sameAsBilling, setSameAsBilling] = useState(false);
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState("");
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleDialogChange = (e) => {
-    const { name, value } = e.target;
-    setDialogFormData({ ...dialogFormData, [name]: value });
-  };
-
-  const saveNewAdd = (e) => {
-    setAddresses((prev) => [...prev, dialogFormData]);
-    e.preventDefault()
-    console.log(type)
-    setShowDialog(false)
-    const newAddress = `${dialogFormData.addressLine1},${dialogFormData.addressLine2},${dialogFormData.postalCode}, ${dialogFormData.city}, ${dialogFormData.state}, ${dialogFormData.country}`;
-
-    // Update selectedAddress and formData with the new address
-    setSelectedAddress(newAddress);
-    setFormData(dialogFormData);
-
-  }
-  const handleNext = (e) => {
-    setAddresses((prev) => [...prev, formData]);
-    e.preventDefault()
-    setShowDialog(false)
-    // setFormData({
-    //   postalCode: "",
-    //   city: "",
-    //   state: "",
-    //   country: "Turkey",
-    //   addressLine1: "",
-    //   addressLine2: "",
-    // });
-  };
-
-  const handleCheckboxChange = (e) => {
-    console.log(e);
-
-    setSameAsBilling(e.target.checked);
-    console.log(sameAsBilling);
-    setIsSameAsBilling(e.target.checked)
-  };
-
-  const addNewAddress = () => {
-    setDialogFormData({
-      addressLine1: "",
-      addressLine2: "",
-      postalCode: "",
-      city: "",
-      state: "",
-      country: "Turkey",
-
-    });
-    setShowDialog(true);
-  };
-  const handleSelectChange = (e) => {
-    const selectedAddress = e.target.value;
-    console.log(selectedAddress);
-
-    const addressArray = addresses;
-    console.log(addresses)
-    const selectedData = addressArray.find(
-      (addr) => `${addr.addressLine1},${addr.addressLine2},${addr.postalCode}, ${addr.city}, ${addr.state}, ${addr.country}` === selectedAddress
-    );
-
-
-    console.log(selectedData);
-    console.log(selectedAddress);
-
-
-    if (selectedData) {
-      setSelectedAddress(selectedAddress)
-      setFormData(selectedData);
-      console.log("set form data if selected data present");
-
-    }
-  };
-
-  const renderDropdown = () => {
-    const addressArray = addresses;
-    return (
-      addressArray.length > 0 && (
-        <select
-          value={selectedAddress}
-          onChange={handleSelectChange}
-          className="border rounded px-4 py-2 w-full mb-4"
-        >
-          {/* <option value="" >Select a saved address</option> */}
-          {addressArray.map((addr, index) => (
-            <option
-              key={index}
-              value={`${addr.addressLine1},${addr.addressLine2},${addr.postalCode}, ${addr.city}, ${addr.state}, ${addr.country}`}
-            >
-              {`${addr.addressLine1},${addr.addressLine2},${addr.postalCode}, ${addr.city}, ${addr.state}, ${addr.country}`}
-            </option>
-          ))}
-        </select>
-      )
-    );
-  };
-
-  const renderNewButton = () => {
-    const addressArray = addresses;
-    // const typeOfElement = type
-    // console.log(typeOfElement);
-
-    return (
-      addressArray.length > 0 && !sameAsBilling && (
-        <button
-          type="button"
-          onClick={() => addNewAddress()}
-          className="mt-2 bg-green-500 text-white px-4 py-2 hover:bg-green-600"
-        >
-          Add New
-        </button>
-      )
-    )
-  }
-
-
-
-  const renderSaveButton = () => {
-    const addressArray = addresses;
-    // const typeOfElement = type
-    // console.log(typeOfElement);
-
-
-    return (
-      addressArray.length == 0 && (
-        <button
-          type="submit"
-          className="bg-orange-500 text-white px-6 py-2 hover:bg-orange-600"
-        >
-          {"Save"}
-        </button>
-      )
-    )
-  }
-  return (
-    <>
-      {showDialog && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Add New Address</h2>
-            <form onSubmit={saveNewAdd}>
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  name="addressLine1"
-                  placeholder="Address Line 1*"
-                  value={dialogFormData.addressLine1}
-                  onChange={handleDialogChange}
-                  required
-                  className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm col-span-2"
-                />
-                <input
-                  type="text"
-                  name="addressLine2"
-                  placeholder="Address Line 2 (Optional)"
-                  value={dialogFormData.addressLine2}
-                  onChange={handleDialogChange}
-                  className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm col-span-2"
-                />
-                <input
-                  type="text"
-                  name="postalCode"
-                  placeholder="ZipCode / Postal Address"
-                  value={dialogFormData.postalCode}
-                  onChange={handleDialogChange}
-                  required
-                  className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm"
-                />
-                <input
-                  type="text"
-                  name="city"
-                  placeholder="City"
-                  value={dialogFormData.city}
-                  onChange={handleDialogChange}
-                  required
-                  className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm"
-                />
-                <input
-                  type="text"
-                  name="state"
-                  placeholder="State / Province"
-                  value={dialogFormData.state}
-                  onChange={handleDialogChange}
-                  required
-                  className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm"
-                />
-                <select
-                  name="country"
-                  value={dialogFormData.country}
-                  onChange={handleDialogChange}
-                  required
-                  className="h-12 p-2 border block w-full border-gray-300 rounded-2xl shadow-sm"
-                >
-                  <option value="Turkey">Turkey</option>
-                  <option value="US">US</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Pakistan">Pakistan</option>
-                </select>
-              </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowDialog(false)}
-                  className="bg-red-500 text-white px-4 py-2 hover:bg-red-600"
-                >
-                  Cancel
-                </ button>
-                <button
-                  type="submit"
-                  className="bg-green-500 text-white px-4 py-2 ml-2 hover:bg-green-600"
-                >
-                  Save
-                </button>
+                <label className="text-xs ms-2 text-gray-400">Enter your Full Name</label>
               </div>
             </form>
           </div>
-        </div>
-      )}
-      <form onSubmit={handleNext} className="space-y-4 my-4">
-        <div className="flex flex-row items-center justify-between">
-          <h2 className="text-2xl font-bold">{heading}</h2>
-          {renderNewButton()}
-        </div>
 
-        {heading == "Delivery Address" &&
-          <div className="flex justify-between items-center">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                // checked={sameAsBilling}
-                className="size-4"
-                onChange={handleCheckboxChange}
+          {/* Billing Address Section */}
+          <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
+            {addresses.map((address) => (
+              <AddressForm
+                key={address.id}
+                id={address.id}
+                addresses={billingAddresses}
+                setAddresses={setBillingAddresses}
+                heading="Billing Address"
+                ref={billingFormRef}
               />
-              <span>Same as billing address</span>
-            </label>
+            ))}
           </div>
-        }
-        {
-          !sameAsBilling &&
-          <>
-            {renderDropdown()}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <input
-                  type="text"
-                  name="addressLine1"
-                  className="h-12 p-2 border mt-1 block w-full border-gray-300 rounded-2xl shadow-sm"
-                  placeholder="Address Line 1*"
-                  value={formData.addressLine1}
-                  onChange={handleChange}
-                  // disabled={disable}
-                  required
-                />
-                <label className="text-xs ms-2 text-gray-400">Enter address line 1.</label>
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="text"
-                  name="addressLine2"
-                  className="h-12 p-2 border mt-1 block w-full border-gray-300 rounded-2xl shadow-sm"
-                  placeholder="Address Line 2 (Optional)"
-                  value={formData.addressLine2}
-                  onChange={handleChange}
-                // disabled={disable}
-                />
-                <label className="text-xs ms-2 text-gray-400">Enter Address Line 2.</label>
-              </div>
-              <div className="md:col-span-1 col-span-2">
-                <input
-                  type="text"
-                  name="postalCode"
-                  className="h-12 p-2 border mt-1 block w-full border-gray-300 rounded-2xl shadow-sm"
-                  placeholder="ZipCode / Postal Address"
-                  value={formData.postalCode}
-                  onChange={handleChange}
-                  // disabled={disable}
-                  required
-                />
-                <label className="text-xs ms-2 text-gray-400">Enter ZipCode / Postal Address.</label>
-              </div>
-              <div className="md:col-span-1 col-span-2">
-                <input
-                  type="text"
-                  name="city"
-                  className="h-12 p-2 border mt-1 block w-full border-gray-300 rounded-2xl shadow-sm"
-                  placeholder="City"
-                  value={formData.city}
-                  onChange={handleChange}
-                  // disabled={disable}
-                  required
-                />
-                <label className="text-xs ms-2 text-gray-400">Enter city name.</label>
-              </div>
-              <div className="md:col-span-1 col-span-2">
-                <input
-                  type="text"
-                  name="state"
-                  className="h-12 p-2 border mt-1 block w-full border-gray-300 rounded-2xl shadow-sm"
-                  placeholder="State / Province"
-                  value={formData.state}
-                  onChange={handleChange}
-                  // disabled={disable}
-                  required
-                />
-                <label className="text-xs ms-2 text-gray-400">Enter Your State / Province.</label>
-              </div>
 
-              <div className="md:col-span-1 col-span-2">
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="h-12 p-2 border mt-1 block w-full border-gray-300 rounded-2xl shadow-sm"
-                  required
-                // disabled={disable}
-                >
-                  <option value="TURKEY">Turkey</option>
-                  <option value="US">US</option>
-                  <option value="CANADA">Canada</option>
-                  <option value="PAKISTAN">Pakistan</option>
-                </select>
-                <label className="text-xs ms-2 text-gray-400">Select Your Country.</label>
-              </div>
-            </div>
-            <div className="flex flex-row items-center justify-end">
-              {/* <button
-                type="submit"
-                className="bg-orange-500 text-white px-6 py-2 hover:bg-orange-600"
-              >
-                {"Save"}
-              </button> */}
-              {renderSaveButton()}
-            </div>
-          </>
-        }
+          {/* Delivery Address Section */}
+          <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
+            {addresses.map((address, index) => (
+              <AddressForm
+                key={index}
+                id={address.id}
+                addresses={deliveryAddresses}
+                setAddresses={setDeliveryAddresses}
+                heading="Delivery Address"
+                setIsSameAsBilling={setSameAsBilling}
+                ref={deliveryFormRef}
+              />
+            ))}
+          </div>
+          {/* Next Button */}
+          <div className="flex self-end me-4 mb-8 w-40">
+            <button
+              type="submit"
+              className="bg-orange-500 text-white px-6 py-2 w-full hover:bg-orange-600"
+              onClick={handleNext}
+            >
+              Next
+            </button>
+          </div>
+        </div>
 
-      </form>
+        {/* Right Section */}
+        <div className="w-full md:w-1/2 bg-orange-100 p-6 h-screen md:fixed md:right-0">
+          <div className="flex flex-col items-center justify-center h-full">
+            <img
+              src={address}
+              alt="Location Placeholder"
+              className="w-1/2 mb-4"
+            />
+            <p className="text-orange-500 font-semibold text-start">
+              <strong>Important Note:</strong>
+              {/* <uo> */}
+              <li>Please ensure the delivery address is accurate
+                and complete to avoid any delays.</li>
+              {/* </uo> */}
+            </p>
+          </div>
+        </div>
+      </div>
     </>
-
   );
 };

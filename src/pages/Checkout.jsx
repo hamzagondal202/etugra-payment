@@ -6,12 +6,12 @@ import creditCard from "../assets/credit.png"
 export default function Checkout() {
     const navigate = useNavigate();
     // const [selectedCountry, setSelectedCountry] = useState("TR");
-    const [quantity, setQuantity] = useState(1);
-    const [duration, setDuration] = useState("1 Year");
+    // const [quantity, setQuantity] = useState(1);
+    // const [duration, setDuration] = useState("1 Year");
     const [totalPrice, setTotalPrice] = useState(920.0);
     const basePrice = 920.0;
     const [formData, setFormData] = useState({
-        nationalIdType: "",
+        nationalIdType: "National ID",
         nationalId: "",
         dob: "",
         hasOrganization: false,
@@ -19,33 +19,38 @@ export default function Checkout() {
         lastName: "",
         organizationName: "",
         taxNumber: "",
-        coupon: ""
+        coupon: "",
+        quantity: 1,
+        duration: "1 Year"
     });
-    const handleQuantityChange = (e) => {
-        const value = parseInt(e.target.value, 10);
-        setQuantity(value > 0 ? value : 1); // Ensure quantity is always greater than 0
-    };
+    // const handleQuantityChange = (e) => {
+    //     const value = parseInt(e.target.value, 10);
+    //     setQuantity(value > 0 ? value : 1); // Ensure quantity is always greater than 0
+    // };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
+        console.log(name, value, type, checked)
         setFormData((prevData) => ({
             ...prevData,
-            [name]: type === "checkbox" ? checked : value,
+            [name]: type === "checkbox" ? checked : name === "quantity" ? Math.max(0, Number(value)) : value,
         }));
     };
 
     const calculateTotalPrice = () => {
         let yearMultiplier = 1;
-        if (duration === "2 Year") yearMultiplier = 2;
-        if (duration === "3 Year") yearMultiplier = 3;
+        if (formData.duration === "2 Year") yearMultiplier = 2;
+        if (formData.duration === "3 Year") yearMultiplier = 3;
 
-        const total = basePrice * yearMultiplier * quantity;
+        const total = basePrice * yearMultiplier * formData.quantity;
         setTotalPrice(total.toFixed(2)); // Ensure the price is formatted to 2 decimal places
     };
 
-    const handleNext = () => {
+    const handleNext = (e) => {
         // Handle navigation or API call
-        navigate("/verify-account");
+        e.preventDefault();
+        console.log(formData)
+        navigate("/verify-account", { state: { checkoutForm: formData } });
     };
 
     useEffect(() => {
@@ -93,8 +98,8 @@ export default function Checkout() {
                                                 type="radio"
                                                 name="duration"
                                                 value={option}
-                                                checked={duration === option}
-                                                onChange={(e) => setDuration(e.target.value)}
+                                                checked={formData.duration === option}
+                                                onChange={handleInputChange}
                                             />
                                             <span>{option}</span>
                                         </label>
@@ -109,14 +114,17 @@ export default function Checkout() {
                                     <h3 className="text-xl font-semibold">Digital Signature</h3>
                                     <input
                                         type="number"
+                                        name="quantity"
                                         className="border border-gray-300 rounded w-12 text-center me-14"
-                                        value={quantity}
-                                        onChange={handleQuantityChange}
+                                        value={formData.quantity === 0 ? "" : formData.quantity}
+                                        onChange={handleInputChange}
+                                        min="0"
+                                        max="99"
                                     />
                                     <p className="text-lg font-semibold">${basePrice.toFixed(2)}</p>
                                 </div>
                                 <p className="text-sm text-gray-600 border-b mb-4">
-                                    Product Overview: This digital signature solution ensures maximum security for your documents with advanced encryption. Easy to use and compliant with legal standards, it is the ideal solution for your business and personal needs.
+                                    <b>Product Overview: </b>This digital signature solution ensures maximum security for your documents with advanced encryption. Easy to use and compliant with legal standards, it is the ideal solution for your business and personal needs.
                                 </p>
 
                                 <div className="mt-8 gap-6 my-10 grid grid-cols-2">
