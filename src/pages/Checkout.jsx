@@ -21,7 +21,7 @@ export default function Checkout() {
         taxNumber: "",
         coupon: "",
         quantity: 1,
-        duration: "1 Year"
+        duration: 1
     });
     // const handleQuantityChange = (e) => {
     //     const value = parseInt(e.target.value, 10);
@@ -39,8 +39,8 @@ export default function Checkout() {
 
     const calculateTotalPrice = () => {
         let yearMultiplier = 1;
-        if (formData.duration === "2 Year") yearMultiplier = 2;
-        if (formData.duration === "3 Year") yearMultiplier = 3;
+        if (formData.duration == 2 ) yearMultiplier = 2;
+        if (formData.duration == 3) yearMultiplier = 3;
 
         const total = basePrice * yearMultiplier * formData.quantity;
         setTotalPrice(total.toFixed(2)); // Ensure the price is formatted to 2 decimal places
@@ -92,16 +92,17 @@ export default function Checkout() {
                                 <div className="flex gap-4 border-b pb-4 my-4">
                                     <p className="text-sm font-bold">Duration:</p>
 
-                                    {['1 Year', '2 Year', '3 Year'].map((option) => (
+                                    {[1, 2, 3].map((option) => (
                                         <label key={option} className="flex items-center space-x-1">
                                             <input
                                                 type="radio"
                                                 name="duration"
                                                 value={option}
-                                                checked={formData.duration === option}
+                                                checked={formData.duration == option}
                                                 onChange={handleInputChange}
                                             />
                                             <span>{option}</span>
+                                            <span>Year</span>
                                         </label>
                                     ))}
                                 </div>

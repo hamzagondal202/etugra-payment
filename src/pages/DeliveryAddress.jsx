@@ -224,8 +224,8 @@ export default function AddressScreen() {
         city_id: 2843, // A city in the 966 state of Turkey
         state_id: 966,
         zip: "98765",
-        vat: "7894561237",
-        tax_office_name: "testing tax office",
+        vat: checkoutForm.taxNumber,
+        tax_office_name: checkoutForm.organizationName,
         country_id: 224, // Turkey
       },
       id: 5,
@@ -255,7 +255,7 @@ export default function AddressScreen() {
       jsonrpc: "2.0",
       method: "call",
       params: {
-        name: "New Delivery test2",
+        name: customerInfo.fullName,
         street: "New Delivery Address",
         city_id: 2845,
         state_id: 966,

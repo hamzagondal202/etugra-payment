@@ -68,6 +68,7 @@ export const AddressForm = forwardRef(function AddressForm({ id, type, onDelete,
         setFormData(dialogFormData);
 
     }
+    
     const handleNext = (e) => {
         setAddresses((prev) => [...prev, formData]);
         e.preventDefault()
