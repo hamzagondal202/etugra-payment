@@ -169,7 +169,7 @@ export default function PaymentInformation() {
             </div>
 
             {/* Right Section with orange background */}
-            <div className="w-full md:w-1/2 bg-orange-100 flex flex-col items-center justify-center p-8">
+            <div className="hidden w-full md:w-1/2 bg-orange-100 md:flex flex-col items-center justify-center p-8">
                 <div className="max-w-md text-center">
                     <img
                         src={paymentIllustration} // Payment illustration

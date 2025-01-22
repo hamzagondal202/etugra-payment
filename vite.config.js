@@ -27,6 +27,12 @@ export default defineConfig({
         secure: false, // Set to true if the API server uses HTTPS
         rewrite: (path) => path.replace(/^\/hi/, '/hi'), // Optional, rewrite the path if needed
       },
+      '/api': {
+        target: 'http://fapi.lspro.com.tr:30300', // Original HTTP endpoint
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''), // Optional path rewrite
+  },
     },
   },
 });

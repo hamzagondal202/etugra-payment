@@ -39,17 +39,20 @@ export default function AddressScreen() {
   const billingFormRef = useRef(null);
   const deliveryFormRef = useRef(null);
 
+
+
+
   const validateFields = () => {
+    console.log(sameAsBilling);
+
     // Check if all customer info fields are filled
     if (!customerInfo.phoneNumber || !customerInfo.email || !customerInfo.fullName) {
       return false;
     }
 
-
     // Validate Billing and Delivery forms
     const isBillingValid = billingFormRef.current.isFormValid();
     const isDeliveryValid = sameAsBilling || deliveryFormRef.current.isFormValid();
-    console.log(billingFormRef.current.getFormData())
 
     return isBillingValid && isDeliveryValid;
   };
@@ -59,21 +62,27 @@ export default function AddressScreen() {
   const handleNext = () => {
     // Validate all fields before proceeding
     if (validateFields()) {
-      if (sameAsBilling) {
-        dataToSubmit = {
-          customerInfo,
-          billingAddresses,
-        };
-        console.log(dataToSubmit);
-      } else {
-        dataToSubmit = {
-          customerInfo,
-          billingAddresses,
-          deliveryAddresses,
-        };
-        console.log(dataToSubmit);
-      }
+      console.log("validating");
+      const selectedBillingAddress =  billingFormRef.current.getFormData()
+      const selectedDeliveryAddress =  deliveryFormRef.current.getFormData()
+      console.log(selectedDeliveryAddress, selectedBillingAddress);
+      
+      // if (sameAsBilling) {
+      //   dataToSubmit = {
+      //     customerInfo,
+      //     billingAddresses,
+      //   };
+      //   console.log(dataToSubmit);
+      // } else {
+      //   dataToSubmit = {
+      //     customerInfo,
+      //     billingAddresses,
+      //     deliveryAddresses,
+      //   };
+      //   console.log(dataToSubmit);
+      // }
       executeApiFlow();
+
       // navigate('/payment'); // Proceed to payment if all fields are valid
     } else {
       setShowError(true)
@@ -179,7 +188,7 @@ export default function AddressScreen() {
             quantity: checkoutForm.quantity,
             company_type: "person",
             verify_type: checkoutForm.nationalIdType,
-            tckn: "58333485650",
+            // tckn: "58333485650",
             passport_no: checkoutForm.nationalId,
             dob: checkoutForm.dob,
             person_first_name: checkoutForm.firstName,
@@ -187,7 +196,7 @@ export default function AddressScreen() {
             email: customerInfo.email,
             phone: checkoutForm.phone,
             usage_area_id: 1, // for nes only
-            account_type: "personal" // or company for KEP, TSA, and API
+            // account_type: "personal" // or company for KEP, TSA, and API
           }
         ]
       },
@@ -215,18 +224,20 @@ export default function AddressScreen() {
   };
 
   const createBillingAddress = async (accessToken) => {
+    const selectedBillingAddress =  billingFormRef.current.getFormData()
+
     const postData = {
       jsonrpc: "2.0",
       method: "call",
       params: {
         name: customerInfo.fullName,
-        street: "Billing Street 3",
-        city_id: 2843, // A city in the 966 state of Turkey
-        state_id: 966,
-        zip: "98765",
+        street: selectedBillingAddress.street,
+        city_id: selectedBillingAddress.city, // A city in the 966 state of Turkey
+        state_id: selectedBillingAddress.state,
+        zip: selectedBillingAddress.postalCode,
         vat: checkoutForm.taxNumber,
         tax_office_name: checkoutForm.organizationName,
-        country_id: 224, // Turkey
+        country_id: selectedBillingAddress.country, // Turkey
       },
       id: 5,
     };
@@ -251,15 +262,18 @@ export default function AddressScreen() {
   };
 
   const createDeliveryAddress = async (accessToken) => {
+    const selectedBillingAddress =  billingFormRef.current.getFormData()
+    const selectedDeliveryAddress =  deliveryFormRef.current.getFormData()
+
     const postData = {
       jsonrpc: "2.0",
       method: "call",
       params: {
         name: customerInfo.fullName,
-        street: "New Delivery Address",
-        city_id: 2845,
-        state_id: 966,
-        zip: "67590",
+        street: sameAsBilling ? selectedBillingAddress.street : selectedDeliveryAddress.street,
+        city_id: sameAsBilling ? selectedBillingAddress.city : selectedDeliveryAddress.city,
+        state_id: sameAsBilling ? selectedBillingAddress.state : selectedDeliveryAddress.state,
+        zip: sameAsBilling ? selectedBillingAddress.postalCode : selectedDeliveryAddress.postalCode,
       },
       id: 7,
     };
@@ -319,7 +333,7 @@ export default function AddressScreen() {
                 onClick={() => setShowError(false)}
                 className="px-4 py-2 text-white bg-red-500 hover:bg-red-600"
               >
-                close
+                Close
               </ button>
             </div>
           </div>
@@ -441,31 +455,31 @@ export default function AddressScreen() {
 
           {/* Billing Address Section */}
           <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
-            {addresses.map((address) => (
-              <AddressForm
-                key={address.id}
-                id={address.id}
-                addresses={billingAddresses}
-                setAddresses={setBillingAddresses}
-                heading="Billing Address"
-                ref={billingFormRef}
-              />
-            ))}
+            {/* {addresses.map((address) => ( */}
+            <AddressForm
+              // key={address.id}
+              // id={address.id}
+              addresses={billingAddresses}
+              setAddresses={setBillingAddresses}
+              heading="Billing Address"
+              ref={billingFormRef}
+            />
+            {/* ))} */}
           </div>
 
           {/* Delivery Address Section */}
           <div className="mb-6 bg-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
-            {addresses.map((address, index) => (
-              <AddressForm
-                key={index}
-                id={address.id}
-                addresses={deliveryAddresses}
-                setAddresses={setDeliveryAddresses}
-                heading="Delivery Address"
-                setIsSameAsBilling={setSameAsBilling}
-                ref={deliveryFormRef}
-              />
-            ))}
+            {/* {addresses.map((address, index) => ( */}
+            <AddressForm
+              // key={index}
+              // id={address.id}
+              addresses={deliveryAddresses}
+              setAddresses={setDeliveryAddresses}
+              heading="Delivery Address"
+              setIsSameAsBilling={setSameAsBilling}
+              ref={deliveryFormRef}
+            />
+            {/* ))} */}
           </div>
           {/* Next Button */}
           <div className="flex self-end me-4 mb-8 w-40">
@@ -480,20 +494,19 @@ export default function AddressScreen() {
         </div>
 
         {/* Right Section */}
-        <div className="w-full md:w-1/2 bg-orange-100 p-6 h-screen md:fixed md:right-0">
-          <div className="flex flex-col items-center justify-center h-full">
+        <div className="hidden w-full md:w-1/2 bg-orange-100 p-6 h-screen md:flex flex-col items-center justify-center md:fixed md:right-0">
+          <div className="max-w-md text-center">
             <img
               src={address}
               alt="Location Placeholder"
-              className="w-1/2 mb-4"
+              className="mb-6 mx-auto w-full md:max-w-xs lg:max-w-md"
             />
-            <p className="text-orange-500 font-semibold text-start">
-              <strong>Important Note:</strong>
-              {/* <uo> */}
+
+            <h3 className="text-xl font-semibold text-orange-600 mb-2 text-start">Important Note:</h3>
+            <ul className="list-disc text-start text-sm text-orange-600 ms-4">
               <li>Please ensure the delivery address is accurate
                 and complete to avoid any delays.</li>
-              {/* </uo> */}
-            </p>
+            </ul>
           </div>
         </div>
       </div>

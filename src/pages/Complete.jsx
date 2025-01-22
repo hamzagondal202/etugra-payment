@@ -50,7 +50,7 @@ export default function Complete() {
             </div>
 
             {/* Right Section */}
-            <div className="w-full md:w-1/2 bg-orange-100 flex flex-col items-center justify-center p-8">
+            <div className="hidden w-full md:w-1/2 bg-orange-100 md:flex flex-col items-center justify-center p-8">
                 <div className="max-w-md text-start">
                     <img
                         src={completeIllustration} // Replace with actual image or URL

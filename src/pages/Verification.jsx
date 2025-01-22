@@ -71,7 +71,7 @@ export default function Verification() {
     return (
         <div className="min-h-screen flex md:flex-row flex-col">
             {/* Left Section with light gray background */}
-            <div className="w-full lg:w-1/2 bg-gray-100 flex flex-col items-center justify-center p-8 gap-4">
+            <div className="w-full md:w-1/2 bg-gray-100 flex flex-col items-center justify-center p-8 gap-4">
                 <ProgressBar currentStep={1} />
                 <img
                     src={etugra}
@@ -93,6 +93,9 @@ export default function Verification() {
                                         country={'tr'}
                                         value={formData.phone}
                                         onChange={phone => setFormData({ ...formData, phone })}
+                                        onlyCountries={['tr']}
+                                        // disableCountryCode={true}
+                                        countryCodeEditable={false}
                                         inputProps={{
                                             name: 'phone',
                                             required: true,
@@ -168,12 +171,12 @@ export default function Verification() {
             </div>
 
             {/* Right Section */}
-            <div className="w-full lg:w-1/2 bg-orange-100 flex flex-col items-center justify-center p-8">
+            <div className="hidden w-full md:w-1/2 bg-orange-100 h-screen md:flex flex-col items-center justify-center p-8">
                 <div className="max-w-md text-center">
                     <img
                         src={createAccountIllustration}
                         alt="Create Account illustration"
-                        className="mb-6 mx-auto w-full max-w-xs lg:max-w-md"
+                        className="mb-6 mx-auto w-full md:max-w-xs lg:max-w-md"
                     />
                     <h3 className="text-xl font-semibold text-orange-600 mb-2 text-start">Important Note:</h3>
                     <ul className="list-disc text-start text-sm text-orange-600 ms-4">
